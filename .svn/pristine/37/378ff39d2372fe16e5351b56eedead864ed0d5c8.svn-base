@@ -1,0 +1,93 @@
+module Main where
+
+import Bomberman
+import Data.Char (isDigit)
+import System.Environment
+import Text.Read
+import Data.Maybe
+
+data Estado = E Mapa Dados Int
+
+           deriving Show
+
+type Mapa = [String]
+type Dados = [String]
+
+convrtpaEstado :: [String] -> Estado
+convrtpaEstado [] = E [] [] 0
+convrtpaEstado (h:t) = E (take (length h) (h:t)) (drop (length h) (h:t)) (length h)
+
+convrtpaString :: Estado -> [String]
+convrtpaString (E m d n) = m ++ d
+
+tamanhoMapa :: Estado -> Int
+tamanhoMapa (E m d n) = n  
+
+avanca :: [String] -> Int -> [String]
+avanca e i | i > (tamanhoMapa(convrtpaEstado e)-2)^2 = convrtpaString (passa1inst (convrtpaEstado e))
+           | otherwise = undefined
+          
+
+{--fazCaracol :: Estado -> Estado
+fazCaracol [] = []
+fazCaracol (E m d y) | take 1 (drop (length h - 2) h) /= "#" = fazCaracolAux h : t
+                     | otherwise = h : fazCaracol t
+
+fazCaracolAux :: String -> String
+fazCaracolAux [] = []
+fazCaracolAux (h:t) | h /= '#' = '#' : t
+                 | otherwise = h : fazCaracolAux t --}
+
+passa1inst :: Estado -> Estado
+passa1inst (E m d n) = (E m (passaDados d) n)
+
+passaDados :: [String] -> [String]
+passaDados l = filter (\l -> head l == '+') l ++ filter (\l -> head l == '!') l ++ diminuitBombas (filter (\l -> head l == '*') l) ++ filter (\l -> isDigit(head l)) l
+
+diminuitBombas :: [String] -> [String]
+diminuitBombas l = map diminuitBomba l
+
+diminuitBomba :: String -> String
+diminuitBomba [] = []
+diminuitBomba l | t /= "1" = s ++ " " ++c++ " " ++ l1++" " ++ jg++ " " ++ r ++ " "++ show ((read t :: Int) -1) 
+                | otherwise = "explode" ++ " " ++ c ++" " ++ l1 ++" " ++ r 
+   where (s,c,l1,jg,r,t) = retiraInfBomba l
+
+
+{-- 
+boom :: Estado -> Estado
+boom [] = []
+boom (E m d n) = (E (boomAux m (explosoes d)) (retiraExplosoes d) n) --}
+
+explosoes :: Dados -> Dados
+explosoes (h:t) = filter (\h -> head h == 'e') (h:t)
+{--
+boomAux :: Mapa -> Dados -> Mapa
+boomAux [] _ = []
+boomAux m [] = m
+boomAux m (h:t) = boomAux (boomAux_2 m (organiza h)) t --}
+
+
+organiza :: String -> (Int,Int,Int)
+organiza [] = (0,0,0)
+organiza l = (read c :: Int, read l :: Int , read r :: Int)
+    where (c,l,r,_,_,_) = retiraInfBomba (drop 8 l)
+
+
+{--
+boomAux_2 :: Mapa -> (Int,Int,Int) -> Mapa
+boomAux_2 [] _ = []
+boomAux_2 (h:t) (c,l,r) | r == 0  = (h:t) 
+                        | otherwise --}
+
+retiraExplosoes :: Dados -> Dados
+retiraExplosoes (h:t) = filter (\h -> head h /= 'e') (h:t)
+
+main :: IO ()
+main = do
+    a <- getArgs
+    let ticks = readMaybe (a !! 0)
+    w <- getContents
+    if isJust ticks
+        then putStr $ unlines $ avanca (lines w) (fromJust ticks)
+        else putStrLn "Parâmetros inválidos"

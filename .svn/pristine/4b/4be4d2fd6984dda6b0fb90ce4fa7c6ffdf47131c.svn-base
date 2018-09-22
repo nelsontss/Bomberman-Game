@@ -1,0 +1,219 @@
+{- |
+Module : Tarefa 1
+Description: Estas sao as funçoes da tarefa 1, que tem como objetivo gerar com base num tamanho e numa seed fornecidos pelo utilizador.
+Copyright: Nelson Sousa, Rui Nuno
+  
+                                                                                                                       -}
+
+module Main where
+
+import System.Environment
+import Text.Read
+import Data.Maybe
+import System.Random
+
+{- | Esta funçao controi a lista de numeros aleotorios necessarios para o mapa, consoante o seu _tamanho__ e a sua __seed__. 
+= Exemplos 
+
+
+>>> blocosuteis 9 0 = [83,93,63,38,0,87,81,1,61,86,13,50,32,80,54,25,90,31,65,92,2,76,70,25,6,29,10,99]
+
+
+-}
+blocosUteis ::
+   Int -- tamanho do mapa 
+   -> Int -- seed
+     -> [Int] -- lista de lista de numeros aleatorios
+blocosUteis t s = take (t*t-(2*t+2*(t-2)+3*4+a^2)) $ randomRs (0,99) (mkStdGen s)
+     where a = if t == 5 then 1 else 1 + ((t-5)`div`2)
+
+
+
+
+{- | Esta função traduz a lista de numeros gerados aleatoreamente para os respetivos simbolos. Onde os numeros entre 0 e 1 representam um __'+'__, entre 2 e 3 um __'!'__, entre 4 e 39 um __'?'__ e , para os restantes um __' '__.
+ 
+= Exemplos 
+
+
+>>> tradLayout [83,93,63,38,0,87,81,1,61,86,13,50,32,80,54,25,90,31,65,92,2,76,70,25,6,29,10,99] = "   ?+  +  ? ?  ? ?  !  ???? "
+
+
+-}
+
+
+tradLayout :: 
+  [Int] -- lista de numeros aleatorios 
+    -> String -- lista de simbolos para o mapa
+tradLayout [] = []
+tradLayout (h:s) | h <= 1 = '+': tradLayout s
+                 | h <= 3 = '!' : tradLayout s
+                 | h <= 39 = '?' : tradLayout s
+                 | otherwise = ' ' : tradLayout s
+
+
+{- | Esta função constroi o mapa com os power ups descobertos, conforme o seu __tamanho__ e a __seed__ dada.
+ 
+= Exemplos 
+
+
+>>> formamapa 9 0 = ["#########","#       #","# #?#+# #","#  +  ? #","#?# # #?#","# ?  !  #","# #?#?# #","#  ??   #","#########"]
+
+-}
+formamapa :: 
+  Int -- tamanho do mapa 
+    -> Int -- seed 
+       -> [String] -- mapa gerado
+formamapa t s = aux t s 1 b
+    where aux t s l b | l == 1 || l==t = replicate t '#'  : aux t s (l+1) b
+                      | (l == 2 || l==(t-1)) && t == 5 = ("#  " ++  " "  ++ "#") : aux t s (l+1) b
+                      | (l == 2 || l==(t-1)) && t /= 5 = ("#  " ++ take (t-6) b  ++ "  #") : aux t s (l+1) (drop (t-6) b)
+                      | l == 3 || l==(t-2) = ("# " ++ "#"++ (fazMeiol3 t b) ++ " #") : aux t s (l+1) (drop ((t-5) `div` 2)  b)
+                      | l >= 4 && l<=(t-3) && odd l = ("#" ++ take 1 b ++ (fazMeiolImpar t (drop 1 b)) ++ "#")  : aux t s (l+1) (drop (((t-2) `div` 2)+1) b)
+                      | l >= 4 && l<=(t-3) && even l = ("#" ++ take (t-2) b ++ "#") : aux t s (l+1) (drop (t-2) b)
+                      | l > t = []
+          b = tradLayout (blocosUteis t s)
+
+
+{- | Esta função faz a parte central da 3º linha do mapa, conforme o seu tamanho e a lista dos numeros aletorios ja traduzidos para o layoutdo mapa.
+ 
+= Exemplos 
+
+
+>>> fazmeiol3 9 "?+"  = "?#+#"
+
+-} 
+fazMeiol3 :: 
+  Int -- tamanho do mapa 
+    -> String -- lista de simbolos para o mapa
+       -> String -- parte central da linha
+fazMeiol3 t b = aux t n b
+         where aux t 0 b = [] 
+               aux t n b = take 1 b ++ "#" ++ aux t (n-1) (drop 1 b)   
+               n = (t-5) `div` 2
+
+{- | Esta função faz a parte central das linhas impares do mapa, conforme o seu tamanho e a lista dos numeros aletorios ja traduzidos para o layoutdo mapa.
+ 
+= Exemplos 
+
+
+>>> fazmeiolImpar 9 "  ?"  = "# # #?"
+
+-}
+fazMeiolImpar :: 
+  Int  -- tamanho do mapa
+    -> String -- lista de simbolos para o mappa
+        -> String -- parte central da linha
+fazMeiolImpar t b = aux t n b
+         where aux t 0 b = [] 
+               aux t n b = "#" ++ take 1 b ++ aux t (n-1) (drop 1 b)   
+               n = (t-3) `div` 2
+
+
+
+{- | Esta função e responsavel por fazer as coordenadas dos power ups de um mapa no seu estado mais bruto, ou seja com os power ups ainda descobertos, sendo que as __colunas__ representam os __x__ e as __linhas__ o __y__
+ 
+= Exemplos 
+
+
+>>> fazCoord ["#########","#       #","# #?#+# #","#  +  ? #","#?# # #?#","# ?  !  #","# #?#?# #","#  ??   #","#########"] = 
+  ["+ 5 2","+ 3 3","! 5 5"]
+
+-}
+fazCoord :: 
+  [String] -- mapa 
+    -> [String] -- lista de coordenadas
+fazCoord [] = []
+fazCoord (h:t) = aux (h:t) 0
+      where aux [] _ = []
+            aux (h:t) l = fazLCoord h l ++ aux t (l+1)
+
+
+{- | Esta função e responsavel por fazer as coordenadas dos power ups de uma linha no seu estado mais bruto, ou seja com os power ups ainda descobertos.
+ 
+= Exemplos 
+
+
+>>> fazLCoord "# #?#+# #" 2 = ["+ 5 2"]
+
+-}
+fazLCoord :: 
+  String -- linha do mapa 
+    -> Int  -- numero da linha
+      -> [String] -- lista de coordenadas
+fazLCoord (h:t) l = aux (h:t) 0 l
+     where aux [] _ _ = []
+           aux (h:t) c l | h == '+' = ("+" ++ " " ++ show c ++ " " ++ show l) : (aux t (c+1) l)
+                         | h == '!' = ("!" ++ " " ++ show c ++ " " ++ show l) : (aux t (c+1) l)
+                         | otherwise = aux t (c+1) l
+
+{- | Esta função vai esconder linha a linha os power ups do mapa, ou seja vai transformar todos os __+__ e __!__ em __?__.
+ 
+= Exemplos 
+
+
+>>> escondePUp ["#########","#       #","# #?#+# #","#  +  ? #","#?# # #?#","# ?  !  #","# #?#?# #","#  ??   #","#########"] = 
+ ["#########","#       #","# #?#?# #","#  ?  ? #","#?# # #?#","# ?  ?  #","# #?#?# #","#  ??   #","#########"]
+
+-}
+escondePUp :: 
+  [String] -- mapa 
+    -> [String] -- mapa com os power ups escondidos
+escondePUp (h:t) = map escondeLPUp (h:t)
+   
+{- | Esta função vai esconder os power ups contidos numa linha do mapa, ou seja vai transformar todos os __+__ e __!__duma linha em __?__.
+ 
+= Exemplos 
+
+
+>>> escondeLPUp ["# #?#+# #"] = ["# #?#?# #"]
+
+-}
+
+escondeLPUp :: 
+  String -- linha do mapa  
+    -> String -- linha do mapa com os power ups escondidos
+escondeLPUp [] = []
+escondeLPUp (h:t) | h == '+' = '?' : escondeLPUp t
+                  | h == '!' = '?' : escondeLPUp t
+                  | otherwise =  h : escondeLPUp t         
+
+{- | Esta função e responsavel por ordenar a lista de cordenadas do mapa, sendo que primeiro estao os power ups de bomb e depois os de flame
+ 
+= Exemplos 
+
+
+>>> ordCoord ["! 5 5","+ 5 3","+ 4 3"] =["+ 5 3","+ 4 3","! 5 5"]
+
+-}
+ordCoord :: 
+  [String] -- lista de coordenadas 
+    -> [String] -- lista ordenada das coordenadas 
+ordCoord [] = []
+ordCoord (h:t) = filter (\h ->  head h == '+') (h:t) ++ filter (\h ->  head h == '!') (h:t)
+
+
+
+
+{- | Esta função que produz um mapa, consuante o __tamanho__ e a __seed__ dada.
+ 
+= Exemplos 
+
+
+>>> mapa 9 0 
+["#########","#       #","# #?#?# #","#  ?  ? #","#?# # #?#","# ?  ?  #","# #?#?# #","#  ??   #","#########","+ 5 2","+ 3 3","! 5 5"]
+
+-}
+mapa ::
+  Int  -- Inteiro recebido como argumento que representa a dimensao do mapa.
+ ->  Int -- Inteiro recebido como argumento que representa a seed escolhida pelo jogador.
+  -> [String] -- Mapa produzido , onde cada string representa uma linha.
+mapa t s = escondePUp (formamapa t s) ++ ordCoord (fazCoord (formamapa t s))
+
+
+main :: IO ()
+main = do a <- getArgs
+          let s = readMaybe (a !! 0)
+          let l = readMaybe (a !! 1)
+          if length a == 2 && isJust s && isJust l && fromJust s >= 5 && odd (fromJust s)
+             then putStr $ unlines $ mapa (fromJust s) (fromJust l)
+             else putStrLn "Parâmetros inválidos"

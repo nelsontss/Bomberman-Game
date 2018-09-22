@@ -1,0 +1,50 @@
+import System.Environment
+import Data.Char
+
+-- t=tamanho do mapa
+
+encode :: [String] -> String
+encode (h:t) = unlines (comprimeL1 h:t)
+
+
+comprimeL1 :: String -> String
+comprimeL1 l = head l : show (length l)
+
+comprimeL2 :: String -> String
+comprimeL2 l = take ((length l)-6) (drop 3 l)
+
+comprimeL3 :: String -> String
+comprimeL3 l = take ((length l)-4) (drop 2 l)
+
+comprimeEven :: String -> String
+comprimeEven l = head (take ((length l)-2) (drop 1 l)):show (length (take ((length l)-2) (drop 1 l))) 
+
+comprimeOdd :: String -> String
+comprimeOdd (h:t) = filter (\h-> h/='#') (h:t)
+
+repetidos :: String -> String
+repetidos [] = []
+repetidos (h:t) = aux 1 h t
+            where aux n x [] = [x]
+                  aux n x (h:t)   | x==h = x:aux (n+1) h t
+                                  | x/=h = x:show n++aux 1 h t
+                                  
+
+decode :: String -> [String]
+decode (h:t) = descomprimeL1 (head (lines (h:t))) :tail (lines (h:t))
+
+descomprimeL1 :: String -> String
+descomprimeL1 (h:n) = replicate (read n) h 
+
+
+
+
+           
+main :: IO ()
+main = do a <- getArgs
+          let p = a !! 0
+          w <- getContents
+          if length a == 1 && length p == 2 && (p=="-e" || p=="-d")
+             then if p=="-e" then putStr $ encode $ lines w
+                             else putStr $ unlines $ decode w
+             else putStrLn "Parâmetros inválidos"

@@ -1,0 +1,106 @@
+import System.Environment
+import Text.Read
+import Data.Maybe
+import System.Random
+
+
+
+{- | Esta função que produz um mapa, consuante o __tamanho__ e a __seed__ dada.
+ 
+= Exemplos 
+
+
+>>> mapa 9 0 
+["#########","#       #","# #?#?# #","#  ?  ? #","#?# # #?#","# ?  ?  #","# #?#?# #","#  ??   #","#########","+ 5 2","+ 3 3","! 5 5"]
+
+-}
+mapa ::
+  Int  -- Inteiro recebido como argumento que representa a dimensao do mapa.
+ ->  Int -- Inteiro recebido como argumento que representa a seed escolhida pelo jogador.
+  -> [String] -- Mapa produzido , onde cada string representa uma linha.
+mapa t s = escondePUp (formamapa t s) ++ ordCoord (fazCoord (formamapa t s))
+
+
+
+escondePUp :: [String] -> [String]
+escondePUp (h:t) = aux (h:t)
+   where aux [] = []
+         aux (h:t) = escondeLPUp h : aux t
+
+escondeLPUp :: String -> String
+escondeLPUp [] = []
+escondeLPUp (h:t) | h == '+' = '?' : escondeLPUp t
+                  | h == '!' = '?' : escondeLPUp t
+                  | otherwise =  h : escondeLPUp t         
+
+ordCoord :: [String] -> [String]
+ordCoord [] = []
+ordCoord (h:t) = filter (\h ->  head h == '+') (h:t) ++ filter (\h ->  head h == '!') (h:t)
+
+fazCoord :: [String] -> [String]
+fazCoord [] = []
+fazCoord (h:t) = aux (h:t) 0
+      where aux [] _ = []
+            aux (h:t) l = fazLCoord h l ++ aux t (l+1)
+
+fazLCoord :: String -> Int  -> [String]
+fazLCoord (h:t) l = aux (h:t) 0 l
+     where aux [] _ _ = []
+           aux (h:t) c l | h == '+' = ("+" ++ " " ++ show c ++ " " ++ show l) : (aux t (c+1) l)
+                         | h == '!' = ("!" ++ " " ++ show c ++ " " ++ show l) : (aux t (c+1) l)
+                         | otherwise = aux t (c+1) l
+    
+
+
+formamapa :: Int -> Int -> [String]
+formamapa t s = aux t s 1 b
+    where aux t s l b | l == 1 || l==t = replicate t '#'  : aux t s (l+1) b
+                      | (l == 2 || l==(t-1)) && t == 5 = ("#  " ++  " "  ++ "#") : aux t s (l+1) b
+                      | (l == 2 || l==(t-1)) && t /= 5 = ("#  " ++ take (t-6) b  ++ "  #") : aux t s (l+1) (drop (t-6) b)
+                      | l == 3 || l==(t-2) = ("# " ++ "#"++ (fazMeiol3 t b) ++ " #") : aux t s (l+1) (drop ((t-5) `div` 2)  b)
+                      | l >= 4 && l<=(t-3) && odd l = ("#" ++ take 1 b ++ (fazMeiolImpar t (drop 1 b)) ++ "#")  : aux t s (l+1) (drop (((t-2) `div` 2)+1) b)
+                      | l >= 4 && l<=(t-3) && even l = ("#" ++ take (t-2) b ++ "#") : aux t s (l+1) (drop (t-2) b)
+                      | l > t = []
+          b = tradLayout (blocosUteis t s)
+
+
+ 
+fazMeiol3 :: Int  -> String  -> String
+fazMeiol3 t b = aux t n b
+         where aux t 0 b = [] 
+               aux t n b = take 1 b ++ "#" ++ aux t (n-1) (drop 1 b)   
+               n = (t-5) `div` 2
+
+fazMeiolImpar :: Int  -> String  -> String
+fazMeiolImpar t b = aux t n b
+         where aux t 0 b = [] 
+               aux t n b = "#" ++ take 1 b ++ aux t (n-1) (drop 1 b)   
+               n = (t-3) `div` 2
+
+
+
+{- Esta funçao traduz o numero da sequencia aleatoria para o seu respetivo simbolo no layout do mapa, exemplo tradLayout 1 = ? 
+
+-}
+
+
+tradLayout :: [Int] -> String
+tradLayout [] = []
+tradLayout (h:s) | h <= 1 = '+': tradLayout s
+                 | h <= 3 = '!' : tradLayout s
+                 | h <= 39 = '?' : tradLayout s
+                 | otherwise = ' ' : tradLayout s
+
+
+blocosUteis :: Int -> Int -> [Int]
+blocosUteis t s = take (t*t-(2*t+2*(t-2)+3*4+a^2)) $ randomRs (0,99) (mkStdGen s)
+     where a = if t == 5 then 1 else 1 + ((t-5)`div`2)
+
+
+main :: IO ()
+main = do a <- getArgs
+          let s = readMaybe (a !! 0)
+          let l = readMaybe (a !! 1)
+          if length a == 2 && isJust s && isJust l && fromJust s >= 5 && odd (fromJust s)
+             then putStr $ unlines $ mapa (fromJust s) (fromJust l)
+             else putStrLn "Parâmetros inválidos"

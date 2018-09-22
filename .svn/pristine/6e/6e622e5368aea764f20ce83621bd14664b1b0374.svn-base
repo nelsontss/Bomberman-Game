@@ -1,0 +1,210 @@
+import Data.Char
+import System.Environment
+
+
+move :: [String] -> Int -> Char -> [String]
+move [] _ _ =  []
+move m j x | x == 'U' && lJog m j /= [] = if not(temtijolo m (c,l)) then if temPrUp (moveUp m j) (c,l) == "+" ||temPrUp (moveUp m j) (c,l) == "!" then retiraPrUp (acrescetaPrUp_Jog(moveUp m j) j a) (c,l) else moveUp m j else m
+           | x == 'D' && lJog m j /= [] = if not(temtijolo m (c1,l1)) then if temPrUp (moveDown m j) (c1,l1) == "+" ||temPrUp (moveDown m j) (c1,l1) == "!" then retiraPrUp (acrescetaPrUp_Jog(moveDown m j) j b) (c1,l1) else moveDown m j else m
+           | x == 'L' && lJog m j /= [] = if not(temtijolo m (c2,l2)) then if temPrUp (moveLeft m j) (c2,l2) == "+" ||temPrUp (moveLeft m j) (c2,l2) =="!" then retiraPrUp (acrescetaPrUp_Jog(moveLeft m j) j e) (c2,l2) else moveLeft m j else m
+           | x == 'R' && lJog m j /= [] = if not(temtijolo m (c3,l3)) then if temPrUp (moveRight m j) (c3,l3) == "+" ||temPrUp (moveRight m j) (c3,l3) =="!" then retiraPrUp (acrescetaPrUp_Jog(moveRight m j) j d) (c3,l3) else moveRight m j else m
+           | x == 'B' && lJog m j /= [] = poeBomba m j
+           | otherwise = m
+   where (_,c,l,_,_) = retiraInfJog (lJog (moveUp m j) j)
+         (_,c1,l1,_,_) = retiraInfJog (lJog (moveDown m j) j)
+         (_,c2,l2,_,_) = retiraInfJog (lJog (moveLeft m j) j)
+         (_,c3,l3,_,_) = retiraInfJog (lJog (moveRight m j) j)
+         a = temPrUp (moveLeft m j) (c,l)
+         b = temPrUp (moveLeft m j) (c1,l1)
+         e = temPrUp (moveLeft m j) (c2,l2)
+         d = temPrUp (moveLeft m j) (c3,l3)
+
+temtijolo :: [String] -> (String,String) -> Bool
+temtijolo [] _ = False
+temtijolo l1 (c,l) | take 1 (drop (read c :: Int) (unlines (take 1 (drop (read l :: Int) l1)))) == "?" = True
+                   | otherwise = False 
+
+acrescetaPrUp_Jog :: [String] -> Int -> String -> [String]
+acrescetaPrUp_Jog m j p = aux m j [] 
+  where aux [] j new  = new
+        aux (h:ts) j new  | head h == intToDigit j = aux ts j (new ++ [(acrescetaPrUp_JogAux p h)]) 
+                          | otherwise = aux ts j (new ++ [h]) 
+
+acrescetaPrUp_JogAux :: String -> String -> String
+acrescetaPrUp_JogAux [] _ = []                          
+acrescetaPrUp_JogAux _ [] = []
+acrescetaPrUp_JogAux p lista | p == "+" = jg ++  " " ++ c ++ " " ++ l ++ " " ++ b ++"+" ++ r 
+                             | p == "!" = jg ++  " " ++ c ++ " " ++ l ++ " " ++ b ++ "!" ++ r    
+           where (jg,c,l,b,r) = retiraInfJog lista
+
+temPrUp :: [String] -> (String,String) -> String
+temPrUp [] _ = []
+temPrUp (h:t) (c,l) | (cp == c && lp == l) && (s == "+" || s == "!")  = s
+                    | otherwise = temPrUp t (c,l)
+       where (s,cp,lp,_,_) = retiraInfJog h
+
+retiraPrUp :: [String] -> (String,String)-> [String] 
+retiraPrUp [] _ = []
+retiraPrUp (h:t) (c,l) = aux (h:t) (c,l) []
+    where aux [] (c,l) new = new
+          aux (h:t) (c,l) new | veInf (drop 2 h) == c && veInf (drop (2 + length (veInf (drop 2 h)) + 1 ) h) == l && (head h == '+'|| head h == '!')  = new ++ t
+                              | otherwise =  aux t (c,l) (new ++ [h])
+          
+
+ordenaMapa :: [String] -> [String]
+ordenaMapa (h:t) = filter (\h -> head h == '#') (h:t) ++ filter (\h -> head h == '+' ) (h:t) ++ filter (\h -> head h == '!' ) (h:t) ++ ordenabombas(filter (\h -> head h == '*') (h:t)) ++ filter (\h -> isDigit (head h)) (h:t)
+
+
+
+ordenabombas :: [String] -> [String]
+ordenabombas [] = []
+ordenabombas [h] = [h]
+ordenabombas (h:y:t) | (read l :: Int) < (read e :: Int) = [h] ++ ordenabombas (y:t)
+                     | (read l :: Int) == (read e :: Int) && (read c :: Int) <= (read d :: Int) = [h] ++ ordenabombas (y:t)
+                     | otherwise = [y] ++ ordenabombas (h:t)
+    where (_,c,l,_,_,_) = retiraInfBomba h
+          (_,d,e,_,_,_) = retiraInfBomba y 
+
+
+poeBomba  :: [String] -> Int -> [String]
+poeBomba m j = if nTemBomba (cordBombas (bombas m)) (c,l) && podePorBomba (bombas m) (length b) j then ordenaMapa (m ++ ["* " ++ c ++ " " ++ l ++ " " ++ jg ++ " " ++ show(1+length r) ++ " "++ "10"])   else m 
+     where (jg,c,l,b,r) = retiraInfJog (lJog m j)
+        
+podePorBomba :: [String] -> Int -> Int -> Bool
+podePorBomba [] _ j = True
+podePorBomba m n j | length (bombasjog m j) < 1 + n = True
+                   | otherwise = False
+                
+
+bombasjog :: [String] -> Int -> [String]
+bombasjog l j = filter (eBombaDoJog j)  l
+
+eBombaDoJog :: Int -> String -> Bool    
+eBombaDoJog j [] = False
+eBombaDoJog j l | show j == jg = True
+                | otherwise = False   
+            where (_,_,_,jg,_,_) = retiraInfBomba l
+            
+
+retiraInfBomba :: String -> (String,String,String,String,String,String)
+retiraInfBomba [] = ([],[],[],[],[],[])
+retiraInfBomba lista = (s,c,l,jg,r,t) 
+      where  s = take 1 lista
+             c = veInf (drop 2 lista)
+             l = veInf (drop (2 + length c + 1 ) lista)
+             jg = veInf (drop (2 + length c + 1 + length l + 1) lista)
+             r = veInf (drop (2 + length c + 1 + length l + 1 + length jg + 1) lista)
+             t = veInf (drop (2 + length c + 1 + length l + 1 + length jg + 1 + length r + 1) lista)
+
+retiraInfJog :: String -> (String,String,String,String,String)
+retiraInfJog [] = ([],[],[],[],[])
+retiraInfJog lista = (j,c,l,b,r)
+      where j = take 1 lista 
+            c = veInf (drop 2 lista)
+            l = veInf (drop (2 + length c + 1 ) lista)
+            b = filter (\h -> h == '+') (veInf (drop (2 + length c + 1 + length l + 1) lista))
+            r = filter (\h -> h == '!') (veInf (drop (2 + length c + 1 + length l + 1) lista))
+
+lJog :: [String] -> Int -> String
+lJog [] j = []
+lJog (h:t) j | head h == intToDigit j = h
+             | otherwise = lJog t j
+
+
+
+nTemBomba :: [(String,String)] -> (String,String) -> Bool
+nTemBomba [] cj = True
+nTemBomba (h:t) cj | h == cj = False
+                   | otherwise = nTemBomba t cj
+
+
+bombas :: [String] -> [String]
+bombas (h:t) = filter (\h -> head h == '*') (h:t)
+
+cordBombas :: [String] -> [(String,String)]
+cordBombas [] = []
+cordBombas (h:t) = ( c , l ) : cordBombas t
+   where c = veInf (drop 2 h)
+         l = veInf (drop (2 + length c + 1) h)
+
+              
+
+moveRight :: [String] -> Int -> [String]
+moveRight m j = aux m j [] t
+  where aux [] j new t = new
+        aux (h:ts) j new t | head h == intToDigit j = aux ts j (new ++ [(alteracoordRight h t)]) t
+                           | otherwise = aux ts j (new ++ [h]) t
+        t = length (head m)
+
+
+alteracoordRight :: String -> Int -> String
+alteracoordRight [] t = []
+alteracoordRight lista t =  if (read c :: Int) < (t-2) && odd (read l :: Int) then  jg ++  " " ++ show ((read c :: Int)  + 1) ++ " " ++ l ++ " " ++ b ++ r 
+                                                                              else jg ++  " " ++ c ++ " " ++ l ++ " " ++ b ++ r 
+      where (jg,c,l,b,r) = retiraInfJog lista
+
+moveLeft :: [String] -> Int -> [String]
+moveLeft m j = aux m j [] t
+  where aux [] j new t = new
+        aux (h:ts) j new t | head h == intToDigit j = aux ts j (new ++ [(alteracoordLeft h t)]) t
+                           | otherwise = aux ts j (new ++ [h]) t
+        t = length (head m)
+
+
+alteracoordLeft :: String -> Int -> String
+alteracoordLeft [] t = []
+alteracoordLeft lista t = if (read c :: Int) > 1 && odd (read l :: Int) then jg ++  " " ++ show ((read c :: Int) - 1) ++ " " ++ l ++ " " ++ b ++ r 
+                                                                        else jg ++  " " ++ c ++ " " ++ l ++ " " ++ b  ++ r 
+      where (jg,c,l,b,r) = retiraInfJog lista
+
+moveDown :: [String] -> Int -> [String]
+moveDown m j = aux m j [] t
+  where aux [] j new t = new
+        aux (h:ts) j new t | head h == intToDigit j = aux ts j (new ++ [(alteracoordDown h t)]) t
+                           | otherwise = aux ts j (new ++ [h]) t
+        t = length (head m)
+      
+
+alteracoordDown :: String -> Int -> String
+alteracoordDown [] t = []
+alteracoordDown lista t = if (read l :: Int) < t-2 && odd (read c ::Int) then jg ++  " " ++ c ++ " " ++ show ((read l :: Int) + 1) ++ " " ++ b ++ r  
+                                                                         else jg ++  " " ++ c ++ " " ++ l ++ " " ++ b ++ r 
+      where (jg,c,l,b,r) = retiraInfJog lista
+
+
+
+
+
+
+moveUp :: [String] -> Int -> [String]
+moveUp m j = aux m j [] t
+  where aux [] j new t = new
+        aux (h:ts) j new t | head h == intToDigit j = aux ts j (new ++ [(alteracoordUp h t)]) t
+                           | otherwise = aux ts j (new ++ [h]) t
+        t = length (head m)
+
+
+alteracoordUp :: String -> Int -> String
+alteracoordUp [] t = []
+alteracoordUp lista t = if (read l :: Int) > 1 && odd (read c ::Int) then jg ++  " " ++ c ++ " " ++ show ((read l :: Int) - 1) ++ " " ++ b ++ " " ++ r 
+                                                                     else jg ++  " " ++ c ++ " " ++ l ++ " " ++ b ++ " " ++ r 
+      where (jg,c,l,b,r) = retiraInfJog lista
+          
+
+veInf :: String -> String 
+veInf [] = []
+veInf (h:t) = aux [] (h:t)
+   where aux inf [] = inf
+         aux inf (h:t) | h /= ' ' =  h : (aux inf t)
+                       | h == ' ' = inf        
+                       
+
+
+main :: IO ()
+main = do a <- getArgs
+          let p = a !! 0
+          let c = a !! 1
+          w <- getContents
+          if length a == 2 && length p == 1 && isDigit (head p) && length c == 1 && head c `elem` "UDLRB"
+             then putStr $ unlines $ move (lines w) (read p) (head c)
+             else putStrLn "Parâmetros inválidos"

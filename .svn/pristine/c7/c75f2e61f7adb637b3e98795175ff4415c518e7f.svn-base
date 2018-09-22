@@ -1,0 +1,94 @@
+import System.Environment
+import Data.Char
+import Data.List
+
+-- t=tamanho do mapa
+
+encode :: [String] -> String
+encode (h:t) = unlines (comprime (take (length h) (h:t)))++ "c" ++unlines (drop (length h) (h:t))
+
+comprime :: [String] -> [String]
+comprime t = aux t 1 tl
+        where aux t l tl | t == [] = []
+                         | l == 1 || l==tl = [] :aux (drop 1 t) (l+1) tl 
+                         | l == 2 || l==(tl-1) =  comprimeL2 (head t) :aux (drop 1 t) (l+1) tl
+                         | l == 3 || l==(tl-2) =  comprimeL3 (head t) :aux (drop 1 t) (l+1) tl
+                         | (l >= 4 || l<=(tl-3)) && odd l = comprimeOdd (head t):aux (drop 1 t) (l+1) tl 
+                         | (l >= 4 || l<=(tl-3)) && even l = comprimeEven (head t) :aux (drop 1 t) (l+1) tl
+                         | otherwise = []
+
+              tl = length t
+
+
+
+comprimeL2 :: String -> String
+comprimeL2 l = repetidos (take ((length l)-6) (drop 3 l))
+
+comprimeL3 :: String -> String
+comprimeL3 l = repetidos (take ((length l)-4) (drop 2 l))
+
+comprimeEven :: String -> String
+comprimeEven l = repetidos (take ((length l)-2) (drop 1 l)) 
+
+comprimeOdd :: String -> String
+comprimeOdd (h:t) = filter (\h-> h/='#') (h:t)
+
+repetidos :: String -> String
+repetidos [] = []
+repetidos (h:t) | length (head (group (h:t)))>1 = h:show (length (head (group (h:t)))) ++ repetidos (drop (length (head (group (h:t)))) (h:t))
+                | otherwise = h:repetidos t
+
+decode :: String -> [String]
+decode l = descomprime (lines (fst(partecomp l))) ++ lines (snd(partecomp l))
+
+descomprime :: [String] -> [String]
+descomprime t = aux t 1 tl
+        where aux t l tl | l == 1 || l==tl = replicate tl '#' :aux (drop 1 t) (l+1) tl 
+                         | l == 2 || l==(tl-1) = ("#  "++descomprimeEven23 (head t)++"  #"):aux (drop 1 t) (l+1) tl
+                         | l == 3 || l==(tl-2) = ("# "++descomprimeEven23 (head t)++" #"):aux (drop 1 t) (l+1) tl
+                         | l >= 4 && l<=(tl-3) && odd l = descomprimeOdd (head t):aux (drop 1 t) (l+1) tl 
+                         | l >= 4 && l<=(tl-3) && even l = ("#"++descomprimeEven23 (head t)++"#"):aux (drop 1 t) (l+1) tl
+                         | l > tl = []
+              tl = length t
+
+descomprimeL1 :: String -> String
+descomprimeL1 (h:n) = replicate (read n) h 
+
+descomprimeOdd :: String -> String
+descomprimeOdd [] = "#"
+descomprimeOdd [h] = '#':[h]++descomprimeOdd []
+descomprimeOdd (h:t) = '#':[h]++descomprimeOdd t
+
+descomprimeEven23 :: String -> String
+descomprimeEven23 [] = []
+descomprimeEven23 [x] = [x]
+descomprimeEven23 (x:y:z) = if isDigit y then replicate (digitToInt y) x++descomprimeEven23 z
+                                         else x:descomprimeEven23 (y:z)
+
+partecomp :: String -> (String,String)
+partecomp [] = ([],[])
+partecomp (h:t) = (a,b)
+            where a = parteaux1 (h:t)
+                  b = parteaux2 (h:t)
+parteaux1 :: String -> String
+parteaux1  [] = []
+parteaux1 (h:t) = aux (h:t) []
+    where   aux [] new = new
+            aux (h:t) new | h /= 'c' = new ++ [h] ++ aux t new
+                          | h ==  'c' = new                  
+parteaux2 :: String -> String
+parteaux2  [] = []
+parteaux2 (h:t) = aux (h:t) []
+    where   aux [] new = new
+            aux (h:t) new | h /= 'c' = aux t new
+                          | h ==  'c' = t 
+
+main :: IO ()
+main = do a <- getArgs
+          let p = a !! 0
+          w <- getContents
+          if length a == 1 && length p == 2 && (p=="-e" || p=="-d")
+             then if p=="-e" then putStr $ encode $ lines w
+                             else putStr $ unlines $ decode w
+             else putStrLn "Parâmetros inválidos"
+

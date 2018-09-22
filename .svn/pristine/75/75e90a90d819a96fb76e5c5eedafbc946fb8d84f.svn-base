@@ -1,0 +1,86 @@
+module Main where
+
+import Bomberman
+import Graphics.Gloss         
+import Graphics.Gloss.Data.Picture  
+import Graphics.Gloss.Interface.Pure.Game
+import Data.Char
+
+type Estado_ = (Estado,Int,[p,b,q])
+
+-- | O estado inicial do jogo.
+estadoInicial :: Estado_
+estadoInicial = (convrtpaEstado (acresentajogs (mapaBM 9 0)),120)
+
+acresentajogs :: Mapa -> Mapa 
+acresentajogs [] = []
+acresentajogs m = m ++ ["0 1 1","1 7 7"]
+
+desenhaJogs :: Dados -> [Picture]
+desenhaJogs [] = []
+desenhaJogs (h:t) | j == "0" = Translate (((read c :: Float))*50) ((-(read l :: Float))*50) (Color orange (rectangleSolid 50 50)) : desenhaJogs t
+                  | j == "1" = Translate (((read c :: Float))*50) ((-(read l :: Float))*50) (Color blue (rectangleSolid 50 50)) : desenhaJogs t
+                  | otherwise = desenhaJogs t
+       where (j,c,l,_,_) = retiraInfJog h          
+
+desenhalinha :: (Float,Float) -> String  -> [Picture]
+desenhalinha  _ []  = []
+desenhalinha (x,y) (h:t) | h == '#' = (Translate x y p) : desenhalinha  ((x+50),y) t
+                         | h == '?' = (Translate x y (Color black (rectangleSolid 50 50))) : desenhalinha ((x+50),y) t
+                         | h == ' ' = desenhalinha ((x+50),y) t
+
+
+desenhaPowerUps :: Dados -> [Picture]
+desenhaPowerUps [] = []
+desenhaPowerUps (h:t) | head h == '*'  = Translate ((read c :: Float)*50) (-(read l :: Float)*50) (Color blue (circleSolid 25)) : desenhaPowerUps t
+                      | head h == '!'  = Translate ((read c :: Float)*50) (-(read l :: Float)*50) (Color green (rectangleSolid 50 50)) : desenhaPowerUps t
+                      | head h == '+'  = Translate ((read c :: Float)*50) (-(read l :: Float)*50) (Color orange (rectangleSolid 50 50)) : desenhaPowerUps t 
+                      | otherwise = desenhaPowerUps t
+    where (_,c,l,_,_,_) = retiraInfBomba h
+          
+-- | Função que desenha o jogo.
+desenhaEstado :: Estado_ -> Picture
+desenhaEstado ((E m d n),t) = Translate (-225) 225  (Pictures[Pictures (desenhaPowerUps d),Pictures (desenhaJogs d),Pictures  (aux m (0,0))])
+    where aux :: Mapa -> (Float,Float) -> [Picture]
+          aux [] _ = []
+          aux  (h:t) (x,y) = (desenhalinha (x,y) h) ++ aux t (0,(y-50))
+
+
+-- | Função que altera o estado do jogo quando acontece um evento.
+reageEvento :: Event -> Estado_ -> Estado_
+reageEvento (EventKey (SpecialKey KeyUp) Down _ _) ((E m d n),t) = (convrtpaEstado (moveBM (convrtpaString (E m d n)) 0 'U'),t)
+reageEvento (EventKey (SpecialKey KeyDown) Down _ _) ((E m d n),t) = (convrtpaEstado (moveBM (convrtpaString (E m d n)) 0 'D'),t)
+reageEvento (EventKey (SpecialKey KeyLeft) Down _ _) ((E m d n),t) = (convrtpaEstado (moveBM (convrtpaString (E m d n)) 0 'L'),t)
+reageEvento (EventKey (SpecialKey KeyRight) Down _ _) ((E m d n),t) = (convrtpaEstado (moveBM (convrtpaString (E m d n)) 0 'R'),t)
+reageEvento (EventKey (SpecialKey KeySpace) Down _ _) ((E m d n),t) = (convrtpaEstado (moveBM (convrtpaString (E m d n)) 0 'B'),t)
+reageEvento (EventKey (Char 'w') Down _ _) ((E m d n),t) = (convrtpaEstado (moveBM (convrtpaString (E m d n)) 1 'U'),t)
+reageEvento (EventKey (Char 's') Down _ _) ((E m d n),t) = (convrtpaEstado (moveBM (convrtpaString (E m d n)) 1 'D'),t)
+reageEvento (EventKey (Char 'a') Down _ _) ((E m d n),t) = (convrtpaEstado (moveBM (convrtpaString (E m d n)) 1 'L'),t)
+reageEvento (EventKey (Char 'd') Down _ _) ((E m d n),t) = (convrtpaEstado (moveBM (convrtpaString (E m d n)) 1 'R'),t)
+reageEvento (EventKey (Char 'q') Down _ _) ((E m d n),t) = (convrtpaEstado (moveBM (convrtpaString (E m d n)) 1 'B'),t)
+reageEvento _ e = e
+
+-- | Função que altera o estado do jogo quando o tempo avança @n@ segundos.
+reageTempo :: Float -> Estado_ -> Estado_
+reageTempo s ((E m d n),t) = (convrtpaEstado (avancaBM (convrtpaString (E m d n)) t),(t-1))
+
+-- | Frame rate
+fr :: Int
+fr = 1
+
+-- | Display mode
+dm :: Display
+dm = InWindow "Novo Jogo" (800, 600) (0, 0)
+    
+-- | Função principal que invoca o jogo.
+main :: IO ()
+main = do p <- loadBMP "pedra2d.bmp"
+          b <- loadBMP "bomb.bmp"
+          q <- loadBMP "YankeeBomber.bmp"  
+          play   dm              -- display mode
+               (greyN 0.5)     -- côr do fundo da janela
+               fr              -- frame rate
+               (estadoInicial p)  -- estado inicial
+               desenhaEstado   -- desenha o estado do jogo
+               reageEvento     -- reage a um evento
+               reageTempo     -- reage ao passar do tempo

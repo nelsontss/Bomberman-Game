@@ -1,0 +1,19 @@
+\select@language {portuges}
+\contentsline {section}{\numberline {0.1}Introdu\IeC {\c c}\IeC {\~a}o}{1}
+\contentsline {section}{\numberline {0.2}Descri\IeC {\c c}\IeC {\~a}o do Problema}{1}
+\contentsline {subsection}{\numberline {0.2.1}Tarefa1}{1}
+\contentsline {subsection}{\numberline {0.2.2}Tarefa2}{1}
+\contentsline {subsection}{\numberline {0.2.3}Tarefa3}{1}
+\contentsline {subsection}{\numberline {0.2.4}Tarefa4}{2}
+\contentsline {subsection}{\numberline {0.2.5}Tarefa5}{2}
+\contentsline {subsubsection}{Flames}{2}
+\contentsline {subsection}{\numberline {0.2.6}Tarefa6}{2}
+\contentsline {section}{\numberline {0.3}Solu\IeC {\c c}\IeC {\~o}es e Testes}{2}
+\contentsline {subsection}{\numberline {0.3.1}Tarefa1}{2}
+\contentsline {subsection}{\numberline {0.3.2}Tarefa2}{2}
+\contentsline {subsection}{\numberline {0.3.3}Tarefa3}{2}
+\contentsline {subsection}{\numberline {0.3.4}Tarefa4}{3}
+\contentsline {subsection}{\numberline {0.3.5}Tarefa5}{3}
+\contentsline {subsubsection}{Flames}{3}
+\contentsline {subsection}{\numberline {0.3.6}Tarefa6}{3}
+\contentsline {section}{\numberline {0.4}Conclus\IeC {\~o}es}{3}

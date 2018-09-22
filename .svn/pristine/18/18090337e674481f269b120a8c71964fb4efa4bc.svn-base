@@ -1,0 +1,149 @@
+import Data.Char
+import System.Environment
+
+
+move :: [String] -> Int -> Char -> [String]
+move [] j c =  []
+move m j 'U' = moveUp m j
+move m j 'D' = moveDown m j
+move m j 'L' = moveLeft m j 
+move m j 'R' = moveRight m j
+move m j 'B' = poeBomba m j
+
+ordenaMapa :: [String] -> [String]
+ordenaMapa (h:t) = filter (\h -> head h == '#') (h:t) ++ filter (\h -> head h == '+' ) (h:t) ++ filter (\h -> head h == '!' ) (h:t) ++ filter (\h -> head h == '*') (h:t) ++ filter (\h -> isDigit (head h)) (h:t)
+
+poeBomba  :: [String] -> Int -> [String]
+poeBomba m j = if nTemBomba (cordBombas (bombas m)) (cordJog (lJog m j)) then ordenaMapa (m ++ ["* " ++ c ++ l ++ r ++ "10"])   else m 
+     where (c,l) = cordJog (lJog m j)
+           r = raioBomba (lJog m j)
+
+raioBomba :: String -> String
+raioBomba l = show (length r)
+   where c = veInf (drop 2 l)
+         l = veInf (drop ( 2 + length c + 1) l)
+         r = veInf (drop ( 2 + length c + 1 + length l + 1) l)
+
+lJog :: [String] -> Int -> String
+lJog [] j = []
+lJog (h:t) j | head h == intToDigit j = h
+             | otherwise = lJog t j
+
+cordJog :: String -> (String,String)
+cordJog lista = (c,l)
+    where c = veInf (drop 2 lista)
+          l = veInf (drop (2 + length c + 1) lista)
+
+
+nTemBomba :: [(String,String)] -> (String,String) -> Bool
+nTemBomba [] cj = True
+nTemBomba (h:t) cj | h == cj = False
+                   | otherwise = nTemBomba t cj
+
+
+bombas :: [String] -> [String]
+bombas m = aux m  []
+   where aux []  new = new
+         aux (h:ts)  new | head h == '*' = aux ts (new ++ [h])
+                          | otherwise = aux ts new
+
+cordBombas :: [String] -> [(String,String)]
+cordBombas (h:t) = ( c , l ) : cordBombas t
+   where c = veInf (drop 2 h)
+         l = veInf (drop (2 + length c + 1) h)
+
+moveRight :: [String] -> Int -> [String]
+moveRight m j = aux m j [] t
+  where aux [] j new t = new
+        aux (h:ts) j new t | head h == intToDigit j = aux ts j (new ++ [(alteracoordRight h t)]) t
+                           | otherwise = aux ts j (new ++ [h]) t
+        t = length (head m)
+
+
+alteracoordRight :: String -> Int -> String
+alteracoordRight [] t = []
+alteracoordRight lista t =  if (read c :: Int) < (t-2) && odd (read l :: Int) then j : ( " " ++ show ((read c :: Int)  + 1) ++ " " ++ l ++ " " ++ b ++ " " ++ r ) 
+                                                                              else j : ( " " ++ c ++ " " ++ l ++ " " ++ b ++ " " ++ r )
+      where j = head lista 
+            c = veInf (drop 2 lista)
+            l = veInf (drop (2 + length c + 1 ) lista)
+            b = veInf (drop (2 + length c + 1 + length l + 1) lista)
+            r = veInf (drop (2 + length c + 1 + length l + 1 + length b + 1) lista)
+
+moveLeft :: [String] -> Int -> [String]
+moveLeft m j = aux m j [] t
+  where aux [] j new t = new
+        aux (h:ts) j new t | head h == intToDigit j = aux ts j (new ++ [(alteracoordLeft h t)]) t
+                           | otherwise = aux ts j (new ++ [h]) t
+        t = length (head m)
+
+
+alteracoordLeft :: String -> Int -> String
+alteracoordLeft [] t = []
+alteracoordLeft lista t = if (read c :: Int) > 1 && odd (read l :: Int) then j : ( " " ++ show ((read c :: Int) - 1) ++ " " ++ l ++ " " ++ b ++ " " ++ r ) 
+                                                                      else j : ( " " ++ c ++ " " ++ l ++ " " ++ b ++ " " ++ r )
+      where j = head lista
+            c = veInf (drop 2 lista)
+            l = veInf (drop (2 + length c + 1 ) lista)
+            b = veInf (drop (2 + length c + 1 + length l + 1) lista)
+            r = veInf (drop (2 + length c + 1 + length l + 1 + length b + 1) lista)
+
+moveDown :: [String] -> Int -> [String]
+moveDown m j = aux m j [] t
+  where aux [] j new t = new
+        aux (h:ts) j new t | head h == intToDigit j = aux ts j (new ++ [(alteracoordDown h t)]) t
+                           | otherwise = aux ts j (new ++ [h]) t
+        t = length (head m)
+      
+
+alteracoordDown :: String -> Int -> String
+alteracoordDown [] t = []
+alteracoordDown lista t = if (read l :: Int) < t-2 && odd (read c ::Int) then j : ( " " ++ c ++ " " ++ show ((read l :: Int) + 1) ++ " " ++ b ++ " " ++ r ) 
+                                                                       else j : ( " " ++ c ++ " " ++ l ++ " " ++ b ++ " " ++ r )
+      where j = head lista
+            c = veInf (drop 2 lista)
+            l = veInf (drop (2 + length c + 1 ) lista)
+            b = veInf (drop (2 + length c + 1 + length l + 1) lista)
+            r = veInf (drop (2 + length c + 1 + length l + 1 + length b + 1) lista)
+
+
+
+
+
+
+moveUp :: [String] -> Int -> [String]
+moveUp m j = aux m j [] t
+  where aux [] j new t = new
+        aux (h:ts) j new t | head h == intToDigit j = aux ts j (new ++ [(alteracoordUp h t)]) t
+                           | otherwise = aux ts j (new ++ [h]) t
+        t = length (head m)
+
+
+alteracoordUp :: String -> Int -> String
+alteracoordUp [] t = []
+alteracoordUp lista t = if (read l :: Int) > 1 && odd (read c ::Int) then j : ( " " ++ c ++ " " ++ show ((read l :: Int) - 1) ++ " " ++ b ++ " " ++ r ) 
+                                                                     else j : ( " " ++ c ++ " " ++ l ++ " " ++ b ++ " " ++ r )
+      where j = head lista
+            c = veInf (drop 2 lista)
+            l = veInf (drop (2 + length c + 1 ) lista)
+            b = veInf (drop (2 + length c + 1 + length l + 1) lista)
+            r = veInf (drop (2 + length c + 1 + length l + 1 + length b + 1) lista)
+          
+
+veInf :: String -> String 
+veInf [] = []
+veInf (h:t) = aux [] (h:t)
+   where aux inf [] = inf
+         aux inf (h:t) | h /= ' ' = reverse (h : (aux inf t)) 
+                       | h == ' ' = inf        
+
+
+
+main :: IO ()
+main = do a <- getArgs
+          let p = a !! 0
+          let c = a !! 1
+          w <- getContents
+          if length a == 2 && length p == 1 && isDigit (head p) && length c == 1 && head c `elem` "UDLRB"
+             then putStr $ unlines $ move (lines w) (read p) (head c)
+             else putStrLn "Parâmetros inválidos"

@@ -1,0 +1,54 @@
+module Main where
+
+import Bomberman
+import Graphics.Gloss         
+import Graphics.Gloss.Data.Picture  
+import Graphics.Gloss.Interface.Pure.Game
+
+
+
+
+-- | O estado inicial do jogo.
+estadoInicial :: Estado
+estadoInicial = convrtpaEstado (mapaBM 9 0)
+
+desenhalinha :: (Float,Float) -> String  -> [Picture]
+desenhalinha  _ []  = []
+desenhalinha (x,y) (h:t) | h == '#' = (Translate x y (Color red (rectangleSolid 50 50))) : desenhalinha  ((x+50),y) t
+                         | h == '?' = (Translate x y (Color black (rectangleSolid 50 50))) : desenhalinha ((x+50),y) t
+                         | h == ' ' = (Translate x y (Color white (rectangleSolid 50 50))) : desenhalinha ((x+50),y) t
+
+          
+-- | Função que desenha o jogo.
+desenhaEstado :: Estado -> Picture
+desenhaEstado (E m d n) = Translate (-225) 225  (Pictures  (aux m (0,0)))
+    where aux :: Mapa -> (Float,Float) -> [Picture]
+          aux [] _ = []
+          aux  (h:t) (x,y) = (desenhalinha (x,y) h) ++ aux t (0,(y-50))
+
+
+-- | Função que altera o estado do jogo quando acontece um evento.
+reageEvento :: Event -> Estado -> Estado
+reageEvento e s = s
+
+-- | Função que altera o estado do jogo quando o tempo avança @n@ segundos.
+reageTempo :: Float -> Estado -> Estado
+reageTempo f s = s
+
+-- | Frame rate
+fr :: Int
+fr = 50
+
+-- | Display mode
+dm :: Display
+dm = InWindow "Novo Jogo" (800, 600) (0, 0)
+    
+-- | Função principal que invoca o jogo.
+main :: IO ()
+main =  play   dm              -- display mode
+               (greyN 0.5)     -- côr do fundo da janela
+               fr              -- frame rate
+               estadoInicial   -- estado inicial
+               desenhaEstado   -- desenha o estado do jogo
+               reageEvento     -- reage a um evento
+               reageTempo      -- reage ao passar do tempo

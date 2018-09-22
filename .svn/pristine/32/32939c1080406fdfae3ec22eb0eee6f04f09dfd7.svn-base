@@ -1,0 +1,59 @@
+import System.Environment
+import Text.Read
+import Data.Maybe
+import System.Random
+
+mapa :: Int -> Int -> [String]
+mapa t s = aux t s 1 b
+    where aux t s l b | l == 1 || l==t = replicate t '#'  : aux t s (l+1) b
+                      | (l == 2 || l==(t-1)) && t == 5 = ("#  " ++  " "  ++ " #") : aux t s (l+1) b
+                      | (l == 2 || l==(t-1)) && t /= 5 = ("#  " ++ take (t-6) b  ++ "  #") : aux t s (l+1) (drop (t-6) b)
+                      | l == 3 || l==(t-2) = ("# " ++ "#"++ (fazMeiol3 t b) ++ " #") : aux t s (l+1) (drop ((t-5) `div` 2)  b)
+                      | l >= 4 && l<=(t-3) && odd l = ("#" ++ take 1 b ++ (fazMeiolImpar t (drop 1 b)) ++ "#")  : aux t s (l+1) (drop (((t-2) `div` 2)+1) b)
+                      | l >= 4 && l<=(t-3) && even l = ("#" ++ take (t-2) b ++ "#") : aux t s (l+1) (drop (t-2) b)
+                      | l > t = []
+          b = tradLayout (blocosUteis t s)
+          
+            
+ 
+fazMeiol3 :: Int  -> String  -> String
+fazMeiol3 t b = aux t n b
+         where aux t 0 b = [] 
+               aux t n b = take 1 b ++ "#" ++ aux t (n-1) (drop 1 b)   
+               n = (t-5) `div` 2
+
+fazMeiolImpar :: Int  -> String  -> String
+fazMeiolImpar t b = aux t n b
+         where aux t 0 b = [] 
+               aux t n b = "#" ++ take 1 b ++ aux t (n-1) (drop 1 b)   
+               n = (t-3) `div` 2
+
+{- Esta funçao replica uma string exemplo repliString 2 "hello" ="hellohello"
+
+-}
+
+repliString :: Int -> String -> String
+repliString _ [] = []
+repliString 0 _ = []
+repliString x l = l ++ repliString (x-1) l
+
+{- Esta funçao traduz o numero da sequencia aleatoria para o seu respetivo simbolo no layout do mapa, exemplo tradLayout 1 = ? 
+
+-}
+
+tradLayout :: [Int] -> String
+tradLayout [] = []
+tradLayout (h:t) | h >= 0 && h <= 39 = '?': tradLayout t
+                 | otherwise = ' ' : tradLayout t
+
+blocosUteis :: Int -> Int -> [Int]
+blocosUteis t s = take (t*t-(2*t+2*(t-2)+3*4+a^2)) $ randomRs (0,99) (mkStdGen s)
+     where a = if t == 5 then 1 else 1 + ((t-5)`div`2)
+
+main :: IO ()
+main = do a <- getArgs
+          let s = readMaybe (a !! 0)
+          let l = readMaybe (a !! 1)
+          if length a == 2 && isJust s && isJust l && fromJust s >= 5 && odd (fromJust s)
+             then putStr $ unlines $ mapa (fromJust s) (fromJust l)
+             else putStrLn "Parâmetros inválidos"

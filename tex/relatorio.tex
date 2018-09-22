@@ -1,0 +1,105 @@
+\documentclass[a4paper]{report}
+
+\usepackage[utf8]{inputenc} 
+\usepackage[portuges]{babel}
+\usepackage{a4wide}
+\usepackage{graphicx}
+
+\title{Projeto de Laboratórios de Informática 1\\Grupo 49}
+\author{Rui Nuno Vilaça Ribeiro 80207 \and Nelson Tiago Silva Sousa 82053}
+\date{\today}
+
+\begin{document}
+
+\maketitle
+
+\begin{abstract}
+  Este trabalho sintetiza o nosso projeto de Laboratórios de Informática do curso de Engenharia Informática da Universidade do Minho, que consiste em realizar o jogo \emph{Bomberman} na linguagem Haskell.
+  Consideramos que fizemos um bom trabalho, visto que esta foi a primeira vez a realizar um projeto em Haskell.
+\end{abstract}
+
+\tableofcontents
+
+\section{Introdução}
+\label{intro} 
+
+ Na 1º e 2º fases do projeto de LI1, o nosso maior objetivo foi tentar acabar todas as tarefas sem dar nenhum erro e, ao mesmo tempo, fazer as funções o mais otimizadas possível. Com o passar do tempo fomo-nos deparando com alguns problemas nas seis tarefas que havia para realizar. 
+ Os maiores obstáculos que encontramos foram a implementação das \emph{flames} e a alta dependência dos testes do \emph{svn}, ou seja, como esta última foi desenvolvida pelo método de tentativa/erro, levou-nos bastante tempo a acabar. 
+ Em seguida, vamos descrever estes problemas mais detalhadamente. 
+
+\section{Descrição do Problema}
+\label{sec:problema}
+
+\subsection{Tarefa1}
+
+O problema com que nos deparamos nesta parte foi gerir mapas através de funções (recursivas). Esta tarefa foi também o primeiro contacto que tivemos com o projeto.
+
+\subsection{Tarefa2}
+
+O problema com que nos deparamos nesta parte foi, dada uma descrição do estado do jogo e um comando de um dos jogadores, determinar o efeito desse comando no estado do jogo.
+
+\subsection{Tarefa3}
+
+Nesta parte o problema com que nos deparamos foi, dada uma descrição do estado do jogo, implementar um mecanismo de compressão/descompressão que permitiria poupar espaço em disco.
+
+\subsection{Tarefa4}
+
+O problema com que nos deparamos nesta parte foi determinar o efeito da passagem de um instante de tempo, dada a descrição do estado do jogo. Esta tarefa não nos levantou muitas dificuldades pelo que explicaremos a nossa soluçao na secção seguinte.
+
+\subsection{Tarefa5}
+
+O problema com que nos deparamos nesta parte foi introduzir a parte gráfica no projeto. Por outras palavras, dada a descrição do estado do jogo tínhamos que traduzir essa informação para um mapa gráfico.
+Esta foi, a nosso ver, a tarefa mais difícil de realizar uma vez que tivemos grandes problemas ao realizá-la. 
+
+\subsubsection{Flames}
+
+Como já referimos em \ref{intro}, um dos maiores problemas na realizaçao da 2º fase do projeto foi a implementação das \emph{flames}, uma vez que a nossa estratégia para fazer explodir as bombas na tarefa 4 não permitia traduzir facilmente as explosões em \emph{flames} no jogo porque não tínhamos uma lista de coordenadas para desenhar as \emph{flames} já que estavamos a trabalhar com o mapa e as coordenadas numa só \emph{string}.
+
+\subsection{Tarefa6}
+
+O problema com que nos deparamos nesta parte foi implementar um \emph{bot}, ou seja, pensar numa estratégia de jogo e usar funções que fizessem com que ele se movimentasse no mapa, metesse bombas e que tentasse não morrer para, consequentemente, ganhar o jogo. 
+
+\section{Soluções e Testes}
+\label{sec:solucoes}
+
+\subsection{Tarefa1}
+
+Para resolver o problema desta tarefa, decidimos gerir cada mapa, linha por linha, pois achamos que essa era a melhor forma para o fazer. No entanto, não encontrámos dificuldades significativas.
+Para testar a nossa solução para esta tarefa, fomos analisando os testes automáticos do \emph{svn} e corrigindo as funções que se encontravam com erros.
+
+\subsection{Tarefa2}
+
+Para resolver o problema desta tarefa, decidimos criar várias funções de verificação para que o jogador não pudesse fazer nada de inválido, como por exemplo, passar por paredes ou tijolos.
+Para testar a nossa solução para esta tarefa, criamos exemplos de mapas através da tarefa 1 e íamos analisando os testes automáticos que o \emph{svn} fazia às funções da tarefa 2 associadas aos exemplos criados por nós.
+
+\subsection{Tarefa3}
+
+Para resolver o problema desta tarefa, tentámos analisar \emph{padrões} na criação de mapas, como a disposição das paredes ou tijolos ou espaços vazios seguidos. Depois de termos escrito essas funções de compressão, fizemos o contrário, ou seja, as de descompressão.
+Para testar a nossa solução para esta tarefa, além de observarmos os testes automáticos que o \emph{svn} fazia às funções da tarefa 3 associadas aos exemplos já existentes, fomos também vendo a percentagem de compressão que nos era atríbuida e assim íammos otimizando as funções. 
+
+\subsection{Tarefa4}
+
+Para resolver o problema desta tarefa, auxiliamo-nos das funções que criamos na \emph{Tarefa 2} e usámo-las associadas à passagem do tempo.
+Para testar a nossa solução para esta tarefa utilizamos os testes automáticos do \emph{svn} associados aos nossos exemplos para terminar esta tarefa com sucesso.
+
+\subsection{Tarefa5}
+
+Para resolver o problema desta tarefa, fizemos funções que substituiam os elementos do mapa por imagens (\emph{bitmaps}) e assim tornar melhor a apresentação do jogo.
+Para testar a solução para esta tarefa, a única hipótese foi simplesmente ir escrevendo as funções e ir testando, para vermos se tudo continuava correto ou se havia coisas que se alteravam e que não eram do nosso agrado.
+
+\subsubsection{Flames}
+
+A solução para este grande obstáculo foi separar a lista do mapa e das coordenadas das bombas/jogadores em duas listas, uma com o mapa e outra com as coordenadas. Assim conseguimos traduzir muito mais facilmente as explosões em \emph{flames} pois passamos a ter uma lista de coordenadas para desenhá-las. 
+
+\subsection{Tarefa6}
+
+Para resolver o problema desta tarefa, utilizamos funções que, consoante o estado do jogo, fariam o \emph{bot} deslocar-se para o meio do mapa, destruindo os tijolos e que não o permitissem ficar no raio de bombas que detonassem. 
+Para testar a nossa solução para esta tarefa, tivemos que ir analisando os resultados dos \emph{torneios} e deste modo fomos melhorando o nosso \emph{bot} pois só assim foi possível mudar/otimizar a estratégia e corrigir erros das funções.
+
+\section{Conclusões}
+\label{sec:conclusao}
+
+Para concluir este relatório, temos a dizer que achamos que fomos bem sucedidos na realização deste projeto pois consideramos que o concretizamos sem erros e de um modo bastante otimizado. Naturalmente que com mais tempo e um pouco mais de conhecimentos acerca desta linguagem, talvez conseguíssemos obter melhores resultados. No entanto, estamos bastante confiantes no resultado final e esperamos concretizar mais projetos com sucesso no futuro.
+
+\end{document}\grid
+\grid
